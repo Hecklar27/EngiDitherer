@@ -84,19 +84,22 @@ class ImageProcessor:
             return image.resize(target_size, Image.Resampling.LANCZOS)
     
     @staticmethod
-    def resize_for_minecraft(image: Image.Image, map_size: Tuple[int, int] = None) -> Image.Image:
+    def resize_for_minecraft(image: Image.Image, map_width: int = 1, map_height: int = 1) -> Image.Image:
         """
-        Resize image for Minecraft map art
+        Resize image for Minecraft map art with support for multiple maps
         
         Args:
             image: PIL Image object
-            map_size: Target map size (default: 128x128)
+            map_width: Number of maps horizontally (default: 1)
+            map_height: Number of maps vertically (default: 1)
             
         Returns:
             Resized image suitable for Minecraft maps
         """
-        if map_size is None:
-            map_size = ImageProcessor.MINECRAFT_MAP_SIZE
+        # Calculate target size based on number of maps
+        target_width = 128 * map_width
+        target_height = 128 * map_height
+        map_size = (target_width, target_height)
         
         # Resize maintaining aspect ratio, then crop/pad to exact size
         image_copy = image.copy()
@@ -112,6 +115,31 @@ class ImageProcessor:
         final_image.paste(image_copy, (x, y))
         
         return final_image
+    
+    @staticmethod
+    def get_map_dimensions_info(map_width: int, map_height: int) -> dict:
+        """
+        Get information about map dimensions
+        
+        Args:
+            map_width: Number of maps horizontally
+            map_height: Number of maps vertically
+            
+        Returns:
+            Dictionary with dimension information
+        """
+        pixel_width = 128 * map_width
+        pixel_height = 128 * map_height
+        total_maps = map_width * map_height
+        
+        return {
+            'map_width': map_width,
+            'map_height': map_height,
+            'pixel_width': pixel_width,
+            'pixel_height': pixel_height,
+            'total_maps': total_maps,
+            'description': f"{map_width}×{map_height} maps ({pixel_width}×{pixel_height} pixels)"
+        }
     
     @staticmethod
     def image_to_array(image: Image.Image) -> np.ndarray:

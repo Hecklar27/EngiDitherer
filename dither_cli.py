@@ -43,17 +43,21 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python dither_cli.py input.jpg                    # Basic dithering
-  python dither_cli.py input.png -o output.png      # Specify output
-  python dither_cli.py input.jpg --no-resize        # Don't resize to 128x128
-  python dither_cli.py input.jpg --comparison       # Save comparison images
-  python dither_cli.py --palette-preview            # Generate palette preview
+  python dither_cli.py input.jpg                              # Basic dithering (1x1 map)
+  python dither_cli.py input.png -o output.png                # Specify output
+  python dither_cli.py input.jpg --map-width 2 --map-height 2 # 2x2 maps (256x256 pixels)
+  python dither_cli.py input.jpg --map-width 1 --map-height 2 # 1x2 maps (128x256 pixels)
+  python dither_cli.py input.jpg --no-resize                  # Don't resize
+  python dither_cli.py input.jpg --comparison                 # Save comparison images
+  python dither_cli.py --palette-preview                      # Generate palette preview
         """
     )
     
     parser.add_argument('input', nargs='?', help='Input image file')
     parser.add_argument('-o', '--output', help='Output file path (default: input_dithered.png)')
-    parser.add_argument('--no-resize', action='store_true', help='Don\'t resize to Minecraft map size (128x128)')
+    parser.add_argument('--no-resize', action='store_true', help='Don\'t resize to Minecraft map size')
+    parser.add_argument('--map-width', type=int, default=1, help='Number of maps horizontally (1-8, default: 1)')
+    parser.add_argument('--map-height', type=int, default=1, help='Number of maps vertically (1-8, default: 1)')
     parser.add_argument('--comparison', action='store_true', help='Save original, quantized, and dithered versions')
     parser.add_argument('--palette-preview', action='store_true', help='Generate and save palette preview')
     parser.add_argument('--quiet', '-q', action='store_true', help='Suppress progress output')
@@ -80,6 +84,15 @@ Examples:
     
     if not ImageProcessor.is_supported_format(args.input):
         print(f"❌ Error: Unsupported file format. Supported: {', '.join(ImageProcessor.SUPPORTED_FORMATS)}")
+        return 1
+    
+    # Validate map dimensions
+    if not (1 <= args.map_width <= 8):
+        print("❌ Error: Map width must be between 1 and 8")
+        return 1
+    
+    if not (1 <= args.map_height <= 8):
+        print("❌ Error: Map height must be between 1 and 8")
         return 1
     
     # Determine output path
@@ -116,6 +129,11 @@ Examples:
     
     print(f"📊 Original image: {image.size[0]}x{image.size[1]} pixels")
     
+    # Show map size info if resizing
+    if not args.no_resize:
+        map_info = ImageProcessor.get_map_dimensions_info(args.map_width, args.map_height)
+        print(f"🗺️  Target map size: {map_info['description']}")
+    
     # Start timing
     start_time = time.time()
     
@@ -125,7 +143,9 @@ Examples:
             print("🔄 Generating comparison images...")
             original, quantized, dithered = ditherer.dither_with_comparison(
                 image, 
-                resize_for_minecraft=not args.no_resize
+                resize_for_minecraft=not args.no_resize,
+                map_width=args.map_width,
+                map_height=args.map_height
             )
             
             # Save all versions
@@ -144,7 +164,12 @@ Examples:
             
         else:
             # Standard dithering
-            dithered = ditherer.dither_image(image, resize_for_minecraft=not args.no_resize)
+            dithered = ditherer.dither_image(
+                image, 
+                resize_for_minecraft=not args.no_resize,
+                map_width=args.map_width,
+                map_height=args.map_height
+            )
             
             # Save result
             ImageProcessor.save_image(dithered, str(output_path))

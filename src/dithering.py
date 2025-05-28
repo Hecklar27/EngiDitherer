@@ -107,13 +107,15 @@ class MinecraftDitherer:
                             new_value = image_array[ny, nx, c] + weighted_error[c]
                             image_array[ny, nx, c] = np.clip(new_value, 0, 255)
     
-    def dither_image(self, image: Image.Image, resize_for_minecraft: bool = True) -> Image.Image:
+    def dither_image(self, image: Image.Image, resize_for_minecraft: bool = True, map_width: int = 1, map_height: int = 1) -> Image.Image:
         """
         Apply dithering to an image
         
         Args:
             image: Input PIL Image
-            resize_for_minecraft: Whether to resize to 128x128 for Minecraft maps
+            resize_for_minecraft: Whether to resize for Minecraft maps
+            map_width: Number of maps horizontally (default: 1)
+            map_height: Number of maps vertically (default: 1)
             
         Returns:
             Dithered PIL Image
@@ -122,8 +124,9 @@ class MinecraftDitherer:
         
         # Prepare image
         if resize_for_minecraft:
-            image = ImageProcessor.resize_for_minecraft(image)
-            print(f"📏 Resized to Minecraft map size: {image.size}")
+            image = ImageProcessor.resize_for_minecraft(image, map_width, map_height)
+            map_info = ImageProcessor.get_map_dimensions_info(map_width, map_height)
+            print(f"📏 Resized to Minecraft map size: {image.size} ({map_info['description']})")
         
         # Convert to RGB array
         image_array = ImageProcessor.image_to_array(image).astype(np.float64)
@@ -167,20 +170,22 @@ class MinecraftDitherer:
         print("✅ Dithering complete!")
         return result_image
     
-    def dither_with_comparison(self, image: Image.Image, resize_for_minecraft: bool = True) -> Tuple[Image.Image, Image.Image, Image.Image]:
+    def dither_with_comparison(self, image: Image.Image, resize_for_minecraft: bool = True, map_width: int = 1, map_height: int = 1) -> Tuple[Image.Image, Image.Image, Image.Image]:
         """
         Dither image and return original, quantized (no dithering), and dithered versions
         
         Args:
             image: Input PIL Image
-            resize_for_minecraft: Whether to resize to 128x128
+            resize_for_minecraft: Whether to resize for Minecraft maps
+            map_width: Number of maps horizontally (default: 1)
+            map_height: Number of maps vertically (default: 1)
             
         Returns:
             (original_image, quantized_image, dithered_image)
         """
         # Prepare original
         if resize_for_minecraft:
-            original = ImageProcessor.resize_for_minecraft(image)
+            original = ImageProcessor.resize_for_minecraft(image, map_width, map_height)
         else:
             original = image.copy()
         

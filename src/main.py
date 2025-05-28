@@ -201,27 +201,60 @@ class DithererGUI:
         
         # Resize option
         self.resize_var = tk.BooleanVar(value=True)
-        resize_check = ttk.Checkbutton(info_frame, text="Resize to 128x128 (Minecraft map size)",
+        resize_check = ttk.Checkbutton(info_frame, text="Resize for Minecraft maps",
                                       variable=self.resize_var)
         resize_check.grid(row=3, column=0, sticky=tk.W, pady=2)
         
+        # Map size selection
+        ttk.Label(info_frame, text="Map Size:", font=('Arial', 9, 'bold')).grid(
+            row=4, column=0, sticky=tk.W, pady=(10, 2))
+        
+        # Map size frame
+        map_size_frame = ttk.Frame(info_frame)
+        map_size_frame.grid(row=5, column=0, sticky=tk.W, pady=2)
+        
+        # Width selection
+        ttk.Label(map_size_frame, text="Width:").grid(row=0, column=0, sticky=tk.W)
+        self.map_width_var = tk.IntVar(value=1)
+        width_spinbox = ttk.Spinbox(map_size_frame, from_=1, to=8, width=5, 
+                                   textvariable=self.map_width_var,
+                                   command=self.update_map_size_info)
+        width_spinbox.grid(row=0, column=1, padx=(5, 10))
+        
+        # Height selection
+        ttk.Label(map_size_frame, text="Height:").grid(row=0, column=2, sticky=tk.W)
+        self.map_height_var = tk.IntVar(value=1)
+        height_spinbox = ttk.Spinbox(map_size_frame, from_=1, to=8, width=5,
+                                    textvariable=self.map_height_var,
+                                    command=self.update_map_size_info)
+        height_spinbox.grid(row=0, column=3, padx=(5, 0))
+        
+        # Map size info label
+        self.map_size_info_var = tk.StringVar()
+        self.map_size_info_label = ttk.Label(info_frame, textvariable=self.map_size_info_var, 
+                                            font=('Arial', 8), foreground='gray')
+        self.map_size_info_label.grid(row=6, column=0, sticky=tk.W, pady=(0, 5))
+        
+        # Update initial map size info
+        self.update_map_size_info()
+        
         # Palette info
-        ttk.Separator(info_frame, orient='horizontal').grid(row=4, column=0, 
+        ttk.Separator(info_frame, orient='horizontal').grid(row=7, column=0, 
                                                            sticky=(tk.W, tk.E), pady=10)
         
         ttk.Label(info_frame, text="Palette:", font=('Arial', 10, 'bold')).grid(
-            row=5, column=0, sticky=tk.W)
+            row=8, column=0, sticky=tk.W)
         
         palette_label = ttk.Label(info_frame, text=self.palette_info, wraplength=200)
-        palette_label.grid(row=6, column=0, sticky=tk.W, pady=(0, 10))
+        palette_label.grid(row=9, column=0, sticky=tk.W, pady=(0, 10))
         
         # Algorithm info
         ttk.Label(info_frame, text="Algorithm:", font=('Arial', 10, 'bold')).grid(
-            row=7, column=0, sticky=tk.W)
+            row=10, column=0, sticky=tk.W)
         
         algorithm_label = ttk.Label(info_frame, text="Floyd-Steinberg Error Diffusion\nLAB Color Space", 
                                    wraplength=200)
-        algorithm_label.grid(row=8, column=0, sticky=tk.W)
+        algorithm_label.grid(row=11, column=0, sticky=tk.W)
         
         # Configure grid weights
         info_frame.columnconfigure(0, weight=1)
@@ -350,6 +383,17 @@ class DithererGUI:
         self.image_info_text.delete(1.0, tk.END)
         self.image_info_text.insert(1.0, info_text)
     
+    def update_map_size_info(self):
+        """Update the map size information display"""
+        try:
+            from image_utils import ImageProcessor
+            map_width = self.map_width_var.get()
+            map_height = self.map_height_var.get()
+            info = ImageProcessor.get_map_dimensions_info(map_width, map_height)
+            self.map_size_info_var.set(f"{info['description']} - {info['total_maps']} total maps")
+        except Exception:
+            self.map_size_info_var.set("1×1 maps (128×128 pixels) - 1 total maps")
+    
     def start_dithering(self):
         """Start the dithering process in a separate thread"""
         if not self.current_image or self.processing:
@@ -380,7 +424,9 @@ class DithererGUI:
             start_time = time.time()
             dithered = self.ditherer.dither_image(
                 self.current_image, 
-                resize_for_minecraft=self.resize_var.get()
+                resize_for_minecraft=self.resize_var.get(),
+                map_width=self.map_width_var.get(),
+                map_height=self.map_height_var.get()
             )
             end_time = time.time()
             
@@ -424,7 +470,9 @@ class DithererGUI:
             # Generate comparison
             original, quantized, dithered = self.ditherer.dither_with_comparison(
                 self.current_image,
-                resize_for_minecraft=self.resize_var.get()
+                resize_for_minecraft=self.resize_var.get(),
+                map_width=self.map_width_var.get(),
+                map_height=self.map_height_var.get()
             )
             
             # Save comparison images
