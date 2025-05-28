@@ -9,8 +9,9 @@ This tool converts regular images into dithered versions that look great when bu
 ## ✨ Features
 
 - **Minecraft-Optimized**: Uses exact carpet color palette from Java Edition
+- **Multi-Map Support**: Create large map art using multiple maps (1×1 to 8×8 configurations)
 - **Intelligent Dithering**: Custom Floyd-Steinberg variant for limited palettes
-- **Simple GUI**: Drag-and-drop interface for easy use
+- **Simple GUI**: Drag-and-drop interface with map size selection
 - **Fast Processing**: Optimized for quick iteration
 - **Multiple Formats**: Supports PNG, JPG, BMP, TIFF, GIF
 
@@ -49,6 +50,7 @@ python launch_gui.py
 - Real-time preview with Original/Dithered tabs
 - Progress bars and status updates
 - Settings panel with Minecraft map resize option
+- **Map size selection**: Choose from 1×1 to 8×8 map configurations
 - Palette preview window
 - Save functionality with file dialogs
 - Comparison mode generation
@@ -58,11 +60,17 @@ python launch_gui.py
 For batch processing or advanced users:
 
 ```bash
-# Basic dithering
+# Basic dithering (single 128×128 map)
 python dither_cli.py input.jpg
 
 # Specify output file
 python dither_cli.py input.png -o output.png
+
+# Create 2×2 maps (256×256 pixels total)
+python dither_cli.py input.jpg --map-width 2 --map-height 2
+
+# Create wide format (1×2 maps, 128×256 pixels)
+python dither_cli.py input.jpg --map-width 1 --map-height 2
 
 # Generate comparison images
 python dither_cli.py input.jpg --comparison
@@ -74,12 +82,44 @@ python dither_cli.py input.jpg --no-resize
 python dither_cli.py --palette-preview
 ```
 
+#### 🗺️ Multi-Map Configurations
+
+The tool supports creating large map art using multiple Minecraft maps arranged in grids:
+
+| Configuration | Pixel Size | Total Maps | Use Case |
+|---------------|------------|------------|----------|
+| 1×1 maps | 128×128 | 1 | Standard single map |
+| 2×1 maps | 256×128 | 2 | Wide format |
+| 1×2 maps | 128×256 | 2 | Tall format |
+| 2×2 maps | 256×256 | 4 | Large square |
+| 3×3 maps | 384×384 | 9 | Extra large |
+| 4×4 maps | 512×512 | 16 | Massive builds |
+| Up to 8×8 | 1024×1024 | 64 | Maximum size |
+
+**Examples:**
+```bash
+# Single map (default)
+python dither_cli.py image.jpg
+
+# Large 4×4 map wall
+python dither_cli.py image.jpg --map-width 4 --map-height 4
+
+# Wide banner (6×2 maps)
+python dither_cli.py image.jpg --map-width 6 --map-height 2
+```
+
 #### 🧪 Testing
 
 Test all components:
 
 ```bash
 python test_phase3.py
+```
+
+Test the multi-map feature specifically:
+
+```bash
+python test_multimap.py
 ```
 
 ### Extract Colors from Your Palette (Optional)
