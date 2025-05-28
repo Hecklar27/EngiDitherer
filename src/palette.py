@@ -26,6 +26,9 @@ class MinecraftPalette:
     
     def __init__(self):
         """Initialize the palette with precomputed color data"""
+        if not self.CARPET_COLORS:
+            raise ValueError("Color palette cannot be empty")
+            
         self.colors_rgb = []
         self.colors_lab = []
         self.color_names = []
